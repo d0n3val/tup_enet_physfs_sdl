@@ -1,0 +1,16 @@
+
+# Configuration for the tup build system
+include_rules
+
+# Additional libraries to link to
+
+# Additional include files
+
+# Compiler defines to tweak SDL behaviour
+CFLAGS += -DPHYSFS_SUPPORTS_7Z=1
+
+: foreach *.c |> !compile |>
+
+# Finally put all .o files inside a library for static linking
+: *.o |> !link_lib |> libstaticphysfs.a
+

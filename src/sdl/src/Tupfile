@@ -1,0 +1,111 @@
+
+# Configuration for the tup build system
+include_rules
+
+# Additional libraries to link to
+
+# Additional include files
+CFLAGS += -I../include
+CFLAGS += -I../gen
+
+# Compiler defines to tweak SDL behaviour
+CFLAGS += -DSDL_SENSOR_DISABLED=1
+CFLAGS += -DSDL_POWER_DISABLED=1
+CFLAGS += -DSDL_STATIC_LIB=1
+
+# Undefines
+#CFLAGS += -USDL_USE_LIBDBUS
+
+: foreach *.c | ../gen/<gen> |> !compile |>
+: foreach atomic/*.c |> !compile |>
+: foreach audio/*.c |> !compile |>
+: foreach cpuinfo/*.c |> !compile |>
+: foreach file/*.c |> !compile |>
+: foreach haptic/*.c | ../gen/<gen> |> !compile |>
+: foreach joystick/*.c | ../gen/<gen> |> !compile |>
+: foreach power/*.c |> !compile |>
+: foreach filesystem/dummy/*.c |> !compile |>
+: foreach render/*.c |> !compile |>
+: foreach render/software/*.c |> !compile |>
+#: foreach sensor/*.c |> !compile |>
+#: foreach sensor/dummy/*.c |> !compile |>
+: foreach stdlib/*.c |> !compile |>
+: foreach thread/*.c |> !compile |>
+: foreach timer/*.c |> !compile |>
+: foreach video/*.c | ../gen/<gen> |> !compile |>
+: foreach video/yuv2rgb/*.c | ../gen/<gen> |> !compile |>
+
+ifeq (@(TUP_PLATFORM),linux)
+	CFLAGS += -DHAVE_DBUS_DBUS_H=1
+	CFLAGS += -I/usr/include/ibus-1.0/
+	CFLAGS += -I/usr/include/dbus-1.0/
+	CFLAGS += -I/usr/lib/dbus-1.0/include/
+	CFLAGS += -I/usr/include/glib-2.0/
+	CFLAGS += -I/usr/include/glib-2.0/glib/
+	CFLAGS += -I/usr/lib/glib-2.0/include/
+
+	: foreach core/unix/*.c |> !compile |>
+	: foreach core/linux/*.c | ../gen/<gen> |> !compile |>
+	: foreach audio/alsa/*.c |> !compile |>
+
+	CFLAGS += -DSDL_VIDEO_DRIVER_WAYLAND=1
+
+	: foreach video/wayland/*.c | ../gen/<gen> |> !compile |>
+	: foreach video/x11/*.c | ../gen/<gen> |> !compile |>
+
+	CFLAGS += -DSDL_VIDEO_OPENGL=1
+	CFLAGS += -DSDL_VIDEO_OPENGL_GLX=1
+	CFLAGS += -DSDL_VIDEO_RENDER_OGL=1
+	: foreach render/opengl/*.c |> !compile |>
+
+	CFLAGS += -DSDL_INPUT_LINUXEV=1
+	CFLAGS += -DHAVE_LIBUDEV_H=1
+	: foreach events/*.c | ../gen/<gen> |> !compile |>
+
+	CFLAGS +=-DSDL_JOYSTICK_LINUX=1
+	: foreach joystick/linux/*.c | ../gen/<gen> |> !compile |>
+	: foreach joystick/steam/*.c |> !compile |>
+	: foreach haptic/linux/*.c | ../gen/<gen> |> !compile |>
+
+	: foreach timer/unix/*.c |> !compile |>
+	: foreach thread/pthread/*.c |> !compile |>
+	: foreach loadso/dlopen/*.c |> !compile |>
+endif
+
+ifeq (@(TUP_PLATFORM),win32)
+	: foreach core/windows/*.c |> !compile |>
+	: foreach audio/directsound/*.c |> !compile |>
+	: foreach audio/wasapi/*.c |> !compile |>
+
+	: foreach video/windows/*.c |> !compile |>
+
+	CFLAGS += -DSDL_VIDEO_OPENGL=1
+	CFLAGS += -DSDL_VIDEO_OPENGL_WGL=1
+	CFLAGS += -DSDL_VIDEO_RENDER_OGL=1
+	: foreach render/opengl/*.c |> !compile |>
+
+	: foreach events/*.c |> !compile |>
+	: foreach joystick/windows/*.c |> !compile |>
+	: foreach haptic/windows/*.c |> !compile |>
+	: foreach timer/windows/*.c |> !compile |>
+	: foreach thread/windows/*.c |> !compile |>
+	: foreach loadso/windows/*.c |> !compile |>
+endif
+
+ifeq (@(TUP_PLATFORM),macosx)
+	: foreach core/unix/*.c |> !compile |>
+
+	CFLAGS += -DSDL_VIDEO_RENDER_METAL=1
+	: foreach render/metal/*.c |> !compile |>
+
+	: foreach events/*.c |> !compile |>
+	: foreach joystick/darwin/*.c |> !compile |>
+	: foreach haptic/darwin/*.c |> !compile |>
+	: foreach timer/unix/*.c |> !compile |>
+	: foreach thread/pthread/*.c |> !compile |>
+	: foreach loadso/dlopen/*.c |> !compile |>
+endif
+
+# Finally put all .o files inside a library for static linking
+: *.o ../wayland-protocols/*.o | ../gen/<gen> |> !link_lib |> libstaticsdl.a
+

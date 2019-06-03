@@ -1,0 +1,6 @@
+
+1 Replace *.txt src/* and include/* wayland-protocols/* files
+2 Edit include/SDL_config.h
+	undef DUMMY VIDEO
+	undef all sound drivers != ALSA
+3 edit src/dynapi/SDL_dynapi.h and put to 0 on the bottom of the file the define

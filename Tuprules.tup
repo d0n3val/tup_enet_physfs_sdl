@@ -1,0 +1,67 @@
+# Global Tupfile include 
+
+# Version to generate version.h
+MAJOR_VER = 3
+MINOR_VER = 1
+PATCH_VER = 9
+
+# Executable name
+EXEC = game@(EXEC_SUFFIX)
+
+# Compiler to use (gcc/clang/cl)
+COMPILER = clang
+
+# Global compiler flags
+CFLAGS += -I.
+CFLAGS += -I$(TUP_CWD)
+CFLAGS += -Wall
+CFLAGS += -fvisibility=hidden
+CFLAGS += -mmmx -m3dnow -msse -msse2 -msse3
+CFLAGS += -fno-exceptions -fno-rtti
+CFLAGS += -march=x86-64
+
+ifeq (@(DEBUG),y)
+	CFLAGS += -O0
+	CFLAGS += -g
+	CFLAGS += -DSDL_DEFAULT_ASSERT_LEVEL=3
+else
+	ifeq (@(FINAL),y)
+		CFLAGS += -Ofast
+		CFLAGS += -DSDL_DEFAULT_ASSERT_LEVEL=0
+	else
+		CFLAGS += -O2
+		CFLAGS += -DSDL_DEFAULT_ASSERT_LEVEL=1
+	endif
+endif
+
+# Macros
+!compile = |> $(COMPILER) $(CFLAGS) -c %f -o %o |> %B.o
+!link = |> $(COMPILER) %f $(CLIBS) -o %o |>
+!link_lib = |> ar crs %o %f |>
+!create_version_h = |> echo -e '$(VERSION_HEADER)' `git rev-parse HEAD` > %o |> 
+
+# Ask tup to generate a .gitignore for us
+.gitignore
+
+# Generated version header with info about release version and compilation process
+VERSION_HEADER = // File generated automatically by build system
+VERSION_HEADER += \n#define VER_MAJOR $(MAJOR_VER)
+VERSION_HEADER += \n#define VER_MINOR $(MINOR_VER)
+VERSION_HEADER += \n#define VER_PATCH $(PATCH_VER)
+VERSION_HEADER += \n#define VER_TUP_PLATFORM "@(TUP_PLATFORM)"
+VERSION_HEADER += \n#define VER_TUP_ARCH "@(TUP_ARCH)"
+VERSION_HEADER += \n#define VER_COMPILER "$(COMPILER)"
+VERSION_HEADER += \n#define VER_COMPILATION_FLAGS "$(CFLAGS)"
+
+ifeq (@(DEBUG),y)
+	VERSION_HEADER += \n#define VER_COMPILATION_TYPE "debug"
+else
+	ifeq (@(FINAL),y)
+		VERSION_HEADER += \n#define VER_COMPILATION_TYPE "final"
+	else
+		VERSION_HEADER += \n#define VER_COMPILATION_TYPE "release"
+	endif
+endif
+
+VERSION_HEADER += \n#define VER_GIT_COMMIT
+

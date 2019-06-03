@@ -1,0 +1,35 @@
+# Configuration for the tup build system
+include_rules
+
+# Libraries to link to
+#CLIBS += -lts lrt
+CLIBS += -lm
+CLIBS += -ldl
+CLIBS += -lasound
+CLIBS += -lGL -lGLU -lz
+CLIBS += --no-undefined
+
+ifeq (@(TUP_PLATFORM),linux)
+	CLIBS += -pthread
+	CLIBS += -lX11
+endif
+
+ifeq (@(TUP_PLATFORM),win32)
+	CLIBS += -shared
+	CLIBS += -mwindows
+	CLIBS += -luser32
+	CLIBS += -lwinmm
+	CLIBS += -limm32
+	CLIBS += -luuid
+	CLIBS += -lstatic-libgcc
+endif
+
+# Directories to search for include files
+CFLAGS += -Isdl/include
+CFLAGS += -Iphysfs/src
+CFLAGS += -Ienet/include
+
+: |> !create_version_h |> version.h
+: foreach *.c | version.h |> !compile |>
+: *.o sdl/src/libstaticsdl.a physfs/src/libstaticphysfs.a enet/libstaticenet.a|> !link |> $(EXEC)
+

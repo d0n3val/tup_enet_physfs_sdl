@@ -1,0 +1,9 @@
+How to compile / install
+
+You need to have tup build system installed
+Execute:
+
+tup init .
+tup variant configs/*.config
+tup
+

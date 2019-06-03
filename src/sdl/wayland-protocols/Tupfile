@@ -1,0 +1,18 @@
+# Build wayland protocols and compile
+
+# Configuration for the tup build system
+include_rules
+
+# Same for macos ?
+ifeq (@(TUP_PLATFORM),linux)
+	# Generate headers
+	# wayland-scanner client-header wayland.xml wayland-client-protocol.h
+	: foreach *.xml |> wayland-scanner client-header %f %o |> ../gen/%B-client-protocol.h ../gen/<gen>
+
+	# Generate code
+	# wayland-scanner public-code wayland.xml wayland-protocol.c
+	: foreach *.xml |> wayland-scanner public-code %f %o |> ../gen/%B-protocol.c ../gen/<gen> {protocols}
+
+	: foreach {protocols} | ../gen/<gen> |> !compile |>
+endif
+
